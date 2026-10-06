@@ -1,0 +1,92 @@
+### Eclipse Workspace Patch 1.0
+#P L2J_Mobius_14.1_SamuraiCrow
+diff --git dist/game/config/General.ini dist/game/config/General.ini
+index ea9630b..68feb8f 100644
+--- dist/game/config/General.ini
++++ dist/game/config/General.ini
+@@ -403,5 +403,5 @@
+ 
+ # Default: True
+-AllowCursedWeapons = True
++AllowCursedWeapons = False
+ 
+ # If false, always block party on event.
+diff --git dist/game/data/scripts/ai/others/CursedWeaponDefense/CursedWeaponDefense.java dist/game/data/scripts/ai/others/CursedWeaponDefense/CursedWeaponDefense.java
+index 241421f..4c58fdd 100644
+--- dist/game/data/scripts/ai/others/CursedWeaponDefense/CursedWeaponDefense.java
++++ dist/game/data/scripts/ai/others/CursedWeaponDefense/CursedWeaponDefense.java
+@@ -30,4 +30,5 @@
+ 
+ import org.l2jmobius.commons.threads.ThreadPool;
++import org.l2jmobius.gameserver.config.GeneralConfig;
+ import org.l2jmobius.gameserver.data.xml.SkillData;
+ import org.l2jmobius.gameserver.entity.Location;
+@@ -178,4 +179,10 @@
+ 	public CursedWeaponDefense()
+ 	{
++		if (!GeneralConfig.ALLOW_CURSED_WEAPONS)
++		{
++			LOGGER.info(getClass().getSimpleName() + ": Disabled by AllowCursedWeapons configuration.");
++			return;
++		}
++		
+ 		int[] npcIds =
+ 		{
+diff --git dist/game/data/scripts/handlers/chat/commands/admin/AdminCursedWeapons.java dist/game/data/scripts/handlers/chat/commands/admin/AdminCursedWeapons.java
+index cdf61e1..2ae78f2 100644
+--- dist/game/data/scripts/handlers/chat/commands/admin/AdminCursedWeapons.java
++++ dist/game/data/scripts/handlers/chat/commands/admin/AdminCursedWeapons.java
+@@ -26,4 +26,5 @@
+ 
+ import org.l2jmobius.commons.util.StringUtil;
++import org.l2jmobius.gameserver.config.GeneralConfig;
+ import org.l2jmobius.gameserver.entity.WorldObject;
+ import org.l2jmobius.gameserver.entity.actor.Player;
+@@ -76,4 +77,10 @@
+ 	public boolean onCommand(String command, Player activeChar)
+ 	{
++		if (!GeneralConfig.ALLOW_CURSED_WEAPONS)
++		{
++			activeChar.sendMessage("Cursed Weapons are disabled in General.ini (AllowCursedWeapons = False).");
++			return true;
++		}
++		
+ 		final CursedWeaponsManager cwm = CursedWeaponsManager.getInstance();
+ 		if (command.startsWith("admin_cw_stop"))
+diff --git dist/game/data/spawns/Oren/SeaOfSpores.xml dist/game/data/spawns/Oren/SeaOfSpores.xml
+index 83bada9..b6d8b87 100644
+--- dist/game/data/spawns/Oren/SeaOfSpores.xml
++++ dist/game/data/spawns/Oren/SeaOfSpores.xml
+@@ -8,5 +8,7 @@
+ 			<npc id="33960" x="57450" y="31235" z="-3736" heading="51260" respawnTime="60sec" /> <!-- Barrier Enforcer -->
+ 			<npc id="33960" x="63633" y="20925" z="-3736" heading="33512" respawnTime="60sec" /> <!-- Barrier Enforcer -->
+-			<npc id="34508" x="65480" y="26024" z="-3747" heading="32770" respawnTime="60sec" /> <!-- Battlefield Guide - Cursed Sword -->
++			<!--
++			<npc id="34508" x="65480" y="26024" z="-3747" heading="32770" respawnTime="60sec" />
++			-->
+ 			<npc id="33846" x="41372" y="21926" z="-3877" heading="18357" respawnTime="60sec" /> <!-- Bacon - Paterson's Disciple -->
+ 		</group>
+diff --git java/org/l2jmobius/gameserver/managers/CursedWeaponsManager.java java/org/l2jmobius/gameserver/managers/CursedWeaponsManager.java
+index b22fe33..44cb6e9 100644
+--- java/org/l2jmobius/gameserver/managers/CursedWeaponsManager.java
++++ java/org/l2jmobius/gameserver/managers/CursedWeaponsManager.java
+@@ -95,4 +95,9 @@
+ 	protected CursedWeaponsManager()
+ 	{
++		if (!GeneralConfig.ALLOW_CURSED_WEAPONS)
++		{
++			return;
++		}
++		
+ 		load();
+ 		
+@@ -430,4 +435,9 @@
+ 	public synchronized void checkDrop(Attackable attackable, Player player)
+ 	{
++		if (!GeneralConfig.ALLOW_CURSED_WEAPONS)
++		{
++			return;
++		}
++		
+ 		// Original block list.
+ 		if ((attackable instanceof Defender) || (attackable instanceof Guard) || (attackable instanceof GrandBoss) || (attackable instanceof FeedableBeast) || (attackable instanceof FortCommander))
